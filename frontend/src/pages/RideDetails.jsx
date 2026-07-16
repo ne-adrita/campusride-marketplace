@@ -33,6 +33,7 @@ const RideDetails = () => {
 
   const handleBook = async () => {
     if (!isAuthenticated) { toast.error('Please login to book a ride'); return; }
+    if (ride.driver_id === user?.user_id) { toast.error('You cannot book your own ride'); return; }
     setBooking(true);
     try {
       await api.post(`/rides/${id}/book`, { seats: 1 });
@@ -66,10 +67,10 @@ const RideDetails = () => {
 
           <div className="mt-6 pt-6 border-t border-gray-100 flex justify-between items-center">
             <span className="text-2xl font-bold text-primary-600">${ride.fare_per_seat} / seat</span>
-            {ride.driver_id !== user?.id && ride.seats_available > 0 && (
+            {ride.driver_id !== user?.user_id && ride.seats_available > 0 && (
               <Button onClick={handleBook} isLoading={booking}>Book Now</Button>
             )}
-            {ride.driver_id === user?.id && <Badge variant="info">Your Ride</Badge>}
+            {ride.driver_id === user?.user_id && <Badge variant="info">Your Ride</Badge>}
           </div>
         </Card>
       </div>

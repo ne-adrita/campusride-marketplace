@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [formData, setFormData] = useState({ name: user?.name || '', bio: user?.bio || '' });
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +19,8 @@ const Settings = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.put('/users/profile', formData);
+      const { data } = await api.put('/users/profile', formData);
+      setUser({ ...user, ...data });
       toast.success('Profile updated successfully!');
     } catch (error) { toast.error('Failed to update profile'); }
     finally { setLoading(false); }

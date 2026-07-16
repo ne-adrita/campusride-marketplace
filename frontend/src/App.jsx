@@ -9,6 +9,10 @@ import Footer from './components/common/Footer';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import FAQ from './pages/FAQ';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 import Dashboard from './pages/Dashboard';
 import Marketplace from './pages/Marketplace';
 import ProductDetails from './pages/ProductDetails';
@@ -20,6 +24,7 @@ import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Wishlist from './pages/Wishlist';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 
 const App = () => {
   return (
@@ -31,6 +36,10 @@ const App = () => {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/product/:id" element={<ProductDetails />} />
           <Route path="/rides" element={<Rides />} />
@@ -47,6 +56,10 @@ const App = () => {
           <Route element={<ProtectedRoute requireVerified />}>
             <Route path="/create-listing" element={<CreateListing />} />
             <Route path="/create-ride" element={<CreateRide />} />
+          </Route>
+
+          <Route element={<ProtectedRoute requireAdmin />}>
+            <Route path="/admin" element={<Admin />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

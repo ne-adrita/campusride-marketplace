@@ -64,7 +64,7 @@ const Navbar = () => {
                         <div className="fixed inset-0 z-10" onClick={closeDropdown} />
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-dropdown border border-gray-100 py-1 z-20">
                           <Link to="/dashboard" onClick={closeDropdown} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Dashboard</Link>
-                          <Link to={`/profile/${user?._id}`} onClick={closeDropdown} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</Link>
+                          <Link to={`/profile/${user?.user_id}`} onClick={closeDropdown} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Profile</Link>
                           <Link to="/wishlist" onClick={closeDropdown} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Wishlist</Link>
                           <Link to="/settings" onClick={closeDropdown} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Settings</Link>
                           {isAdmin && (

@@ -1,7 +1,16 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
+if (!VITE_API_URL) {
+  if (import.meta.env.PROD) {
+    throw new Error('VITE_API_URL environment variable is required in production. Set it in your deployment environment.');
+  }
+  console.warn('VITE_API_URL not set. Using development default http://localhost:5000/api');
+}
+
+const API_URL = VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,

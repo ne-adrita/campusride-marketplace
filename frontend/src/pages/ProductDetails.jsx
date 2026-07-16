@@ -9,13 +9,12 @@ import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { FaHeart, FaRegHeart, FaMapMarkerAlt } from 'react-icons/fa';
-import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isInWishlist, setIsInWishlist] = useState(false);

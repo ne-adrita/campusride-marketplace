@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -9,6 +9,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { FaPaperPlane } from 'react-icons/fa';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const Messages = () => {
   const { user } = useAuth();
@@ -20,18 +21,54 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const initialLoadDone = useRef(false);
+
+  const fetchMessages = useCallback(async (userId) => {
+    try {
+      const { data } = await api.get(`/messages/${userId}`);
+      setMessages(data);
+    } catch (error) { console.error('Error fetching messages:', error); }
+  }, []);
+
+  const openConversation = useCallback(async (userId) => {
+    const conv = conversations.find(c => c.user_id === userId);
+    if (conv) {
+      setCurrentConversation(conv);
+      fetchMessages(conv.user_id);
+      return;
+    }
+    try {
+      const { data } = await api.get(`/users/${userId}`);
+      const newConv = {
+        user_id: data.user_id || data._id || data.id,
+        name: data.name,
+        profile_pic: data.profile_pic || data.avatar,
+        last_message: null,
+      };
+      setCurrentConversation(newConv);
+      setMessages([]);
+    } catch (error) {
+      toast.error('Could not load user');
+      console.error('Error fetching user for new conversation:', error);
+    }
+  }, [conversations, fetchMessages]);
 
   useEffect(() => {
     fetchConversations();
   }, []);
 
   useEffect(() => {
+    if (initialLoadDone.current) return;
     const userId = searchParams.get('user');
-    if (userId && conversations.length > 0) {
-      const conv = conversations.find(c => c.user_id === userId);
-      if (conv) { setCurrentConversation(conv); fetchMessages(conv.user_id); }
+    if (userId && !user?.user_id === !userId) {
+      if (conversations.length > 0 || loading === false) {
+        initialLoadDone.current = true;
+        openConversation(userId);
+      }
+    } else if (!userId && loading === false) {
+      initialLoadDone.current = true;
     }
-  }, [searchParams, conversations]);
+  }, [searchParams, conversations, loading, user, openConversation]);
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
@@ -39,19 +76,13 @@ const Messages = () => {
     try {
       const { data } = await api.get('/messages/conversations');
       setConversations(data);
-      if (data.length > 0 && !searchParams.get('user')) {
+      const userId = searchParams.get('user');
+      if (!userId && data.length > 0) {
         setCurrentConversation(data[0]);
         fetchMessages(data[0].user_id);
       }
     } catch (error) { console.error('Error fetching conversations:', error); }
     finally { setLoading(false); }
-  };
-
-  const fetchMessages = async (userId) => {
-    try {
-      const { data } = await api.get(`/messages/${userId}`);
-      setMessages(data);
-    } catch (error) { console.error('Error fetching messages:', error); }
   };
 
   const sendMessage = async (e) => {
@@ -65,6 +96,7 @@ const Messages = () => {
       });
       setMessages(prev => [...prev, data]);
       setNewMessage('');
+      fetchConversations();
     } catch (error) { console.error('Error sending message:', error); }
     finally { setSending(false); }
   };
@@ -105,10 +137,10 @@ const Messages = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto p-4 space-y-3">
                     {messages.map((msg) => (
-                      <div key={msg.message_id} className={`flex ${msg.sender_id === user.id ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[70%] px-4 py-2 rounded-lg ${msg.sender_id === user.id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                      <div key={msg.message_id} className={`flex ${msg.sender_id === user?.user_id ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[70%] px-4 py-2 rounded-lg ${msg.sender_id === user?.user_id ? 'bg-primary-600 text-white' : 'bg-gray-100 text-gray-900'}`}>
                           <p className="text-sm">{msg.content}</p>
-                          <p className={`text-xs mt-1 ${msg.sender_id === user.id ? 'text-primary-200' : 'text-gray-500'}`}>{format(new Date(msg.sent_at), 'h:mm a')}</p>
+                          <p className={`text-xs mt-1 ${msg.sender_id === user?.user_id ? 'text-primary-200' : 'text-gray-500'}`}>{format(new Date(msg.sent_at), 'h:mm a')}</p>
                         </div>
                       </div>
                     ))}

@@ -13,15 +13,15 @@ import { format } from 'date-fns';
 
 const Profile = () => {
   const { id } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [profileUser, setProfileUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const isOwnProfile = !id || id === user?.id;
+  const isOwnProfile = !id || id === user?.user_id;
 
   useEffect(() => {
-    const userId = id || user?.id;
+    const userId = id || user?.user_id;
     if (!userId) { navigate('/login'); return; }
     fetchProfile(userId);
   }, [id, user]);

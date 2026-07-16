@@ -2,30 +2,36 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
+const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 const AuthContext = createContext();
+
+const demoUser = IS_DEMO_MODE ? {
+  user_id: 'demo123',
+  name: 'Demo Student',
+  email: 'demo@university.edu',
+  studentId: 'STU-2024-001',
+  verified: true,
+  role: 'student',
+  avatar: null,
+  phone: '+1-555-0123',
+  rating: 4.5,
+} : null;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  const demoUser = {
-    _id: 'demo123',
-    name: 'Demo Student',
-    email: 'demo@university.edu',
-    studentId: 'STU-2024-001',
-    verified: true,
-    role: 'student',
-    avatar: null,
-    phone: '+1-555-0123',
-    rating: 4.5,
-  };
-
   useEffect(() => {
+    if (IS_DEMO_MODE) {
+      setUser(demoUser);
+      setLoading(false);
+      return;
+    }
     if (token) {
       loadUser();
     } else {
-      setUser(demoUser);
       setLoading(false);
     }
   }, [token]);
@@ -33,7 +39,7 @@ export const AuthProvider = ({ children }) => {
   const loadUser = async () => {
     try {
       const { data } = await api.get('/auth/me');
-      setUser(data);
+      setUser({ ...data, user_id: data.user_id || data._id || data.id });
     } catch (error) {
       if (error.response?.status === 401) {
         logout();
@@ -48,16 +54,12 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/login', { email, password });
       localStorage.setItem('token', data.token);
       setToken(data.token);
-      setUser(data.user);
+      const userData = { ...data.user, user_id: data.user.user_id || data.user._id || data.user.id };
+      setUser(userData);
       toast.success('Welcome back!');
       return { success: true };
     } catch (error) {
-      if (!error.response) {
-        setUser(demoUser);
-        toast.success('Welcome back! (Demo Mode)');
-        return { success: true };
-      }
-      return { success: false, error: error.response?.data?.message };
+      return { success: false, error: error.response?.data?.message || 'Network error. Backend unreachable.' };
     }
   };
 
@@ -71,16 +73,12 @@ export const AuthProvider = ({ children }) => {
       });
       localStorage.setItem('token', data.token);
       setToken(data.token);
-      setUser(data.user);
+      const userData = { ...data.user, user_id: data.user.user_id || data.user._id || data.user.id };
+      setUser(userData);
       toast.success('Registration successful! Please wait for admin verification.');
       return { success: true };
     } catch (error) {
-      if (!error.response) {
-        setUser(demoUser);
-        toast.success('Registered successfully! (Demo Mode)');
-        return { success: true };
-      }
-      return { success: false, error: error.response?.data?.message };
+      return { success: false, error: error.response?.data?.message || 'Network error. Backend unreachable.' };
     }
   };
 

@@ -24,6 +24,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (!error.response) return Promise.reject(error);
+    
     const message = error.response?.data?.message || 'Something went wrong';
     
     if (error.response?.status === 401) {

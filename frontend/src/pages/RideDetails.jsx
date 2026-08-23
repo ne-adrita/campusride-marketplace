@@ -93,10 +93,18 @@ const RideDetails = () => {
           <div className="mt-6 pt-6 border-t border-navy-100 flex flex-col sm:flex-row justify-between items-center gap-4">
             <span className="text-2xl font-bold text-primary-600">{formatPrice(ride.fare_per_seat)} / seat</span>
             {ride.driver_id !== user?.user_id && ride.seats_available > 0 && (
-              <Button onClick={handleBook} isLoading={booking} className="w-full sm:w-auto">Book Now</Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                <Button onClick={() => {
+                  if (!isAuthenticated) { toast.error('Please login to book'); navigate('/login'); return; }
+                  if (ride.driver_id === user?.user_id) { toast.error('You cannot book your own ride'); return; }
+                  navigate(`/checkout?type=ride&id=${id}`);
+                }} className="w-full sm:w-auto">Pay & Book — {formatPrice(ride.fare_per_seat)}</Button>
+                <Button variant="secondary" onClick={handleBook} isLoading={booking} className="w-full sm:w-auto">Book without Pay</Button>
+              </div>
             )}
             {ride.driver_id === user?.user_id && <Badge variant="info">Your Ride</Badge>}
           </div>
+          <p className="text-xs text-center text-navy-400 mt-3">Secure payment via bKash, Nagad, Rocket or Card</p>
         </Card>
       </div>
     </div>

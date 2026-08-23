@@ -130,8 +130,13 @@ const ProductDetails = () => {
                 </div>
                 {product.seller_verified && <Badge variant="success">Verified</Badge>}
               </div>
-              <div className="mt-4">
-                <Button className="w-full" onClick={() => navigate(`/messages?user=${product.seller_id}`)}>Message Seller</Button>
+              <div className="mt-4 space-y-3">
+                <Button className="w-full" onClick={() => {
+                  if (!isAuthenticated) { toast.error('Please login to buy'); navigate('/login'); return; }
+                  navigate(`/checkout?type=product&id=${id}`);
+                }}>Buy Now — {formatPrice(product.price)}</Button>
+                <Button variant="secondary" className="w-full" onClick={() => navigate(`/messages?user=${product.seller_id}`)}>Message Seller</Button>
+                <p className="text-xs text-center text-navy-400">Pay with bKash, Nagad, Rocket or Card</p>
               </div>
             </div>
           </div>

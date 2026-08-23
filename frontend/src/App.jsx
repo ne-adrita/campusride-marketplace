@@ -29,6 +29,8 @@ const Profile = lazy(() => import('./pages/Profile'));
 const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Admin = lazy(() => import('./pages/Admin'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const ScrollToTopWrapper = ({ children }) => {
@@ -64,6 +66,8 @@ const App = () => {
                   <Route path="/profile/:id?" element={<Profile />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment/success" element={<PaymentSuccess />} />
                 </Route>
 
                 <Route element={<ProtectedRoute requireVerified />}>

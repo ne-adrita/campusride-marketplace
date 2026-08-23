@@ -6,7 +6,7 @@ export function usdToBdt(usdAmount) {
 }
 
 export function formatBDT(amount) {
-  return new Intl.NumberFormat('bn-BD', {
+  return new Intl.NumberFormat('en-BD', {
     style: 'currency',
     currency: 'BDT',
     minimumFractionDigits: 0,

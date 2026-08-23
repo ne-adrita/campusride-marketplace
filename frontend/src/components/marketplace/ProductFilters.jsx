@@ -73,7 +73,7 @@ const ProductFilters = ({ filters, categories = [], onFilterChange, onClearFilte
             name="minPrice"
             value={filters.minPrice || ''}
             onChange={handleChange}
-            placeholder="Min $"
+            placeholder="Min ৳"
             className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           />
           <input
@@ -81,7 +81,7 @@ const ProductFilters = ({ filters, categories = [], onFilterChange, onClearFilte
             name="maxPrice"
             value={filters.maxPrice || ''}
             onChange={handleChange}
-            placeholder="Max $"
+            placeholder="Max ৳"
             className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           />
         </div>

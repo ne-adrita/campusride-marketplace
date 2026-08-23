@@ -94,7 +94,7 @@ const CreateListing = () => {
               <textarea rows="4" placeholder="Describe your item" className="w-full px-4 py-2 border border-navy-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none focus-visible:ring-2 focus-visible:ring-primary-500" {...register('description', sanitizeProps)} />
               {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
             </div>
-            <Input label="Price ($)" type="number" placeholder="0.00" error={errors.price?.message} min="0" step="0.01" {...register('price')} />
+            <Input label="Price (৳)" type="number" placeholder="0.00" error={errors.price?.message} min="0" step="0.01" {...register('price')} />
 
             <select {...register('condition')} className="w-full px-4 py-2 border border-navy-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none focus-visible:ring-2 focus-visible:ring-primary-500">
               <option value="New">New</option>

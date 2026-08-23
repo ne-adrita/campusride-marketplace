@@ -9,6 +9,7 @@ import { addToWishlist, removeFromWishlist } from '../../services/wishlistServic
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { formatTimeAgo } from '../../data';
+import { formatPrice } from '../../utils/currency';
 
 const ProductCard = ({ product }) => {
   const { isAuthenticated } = useAuth();
@@ -85,7 +86,7 @@ const ProductCard = ({ product }) => {
           </h3>
         </div>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-bold text-primary-600">${product.price}</span>
+          <span className="text-lg font-bold text-primary-600">{formatPrice(product.price)}</span>
           {timeAgo && <span className="text-xs text-navy-400">{timeAgo}</span>}
         </div>
         {product.location && (

@@ -11,6 +11,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { FaHeart, FaRegHeart, FaMapMarkerAlt, FaImage } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { formatPrice } from '../utils/currency';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -112,7 +113,7 @@ const ProductDetails = () => {
                   {isInWishlist ? <FaHeart className="text-red-500 text-xl" /> : <FaRegHeart className="text-navy-300 text-xl" />}
                 </button>
               </div>
-              <div className="mt-4 text-3xl font-bold text-primary-600">${product.price}</div>
+              <div className="mt-4 text-3xl font-bold text-primary-600">{formatPrice(product.price)}</div>
               <div className="mt-4 border-t border-navy-100 pt-4">
                 <h3 className="font-semibold text-sm text-navy-600">Description</h3>
                 <p className="text-navy-400 mt-2 text-sm">{product.description || 'No description provided.'}</p>

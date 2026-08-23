@@ -32,8 +32,8 @@ export async function getProducts(params = {}) {
       }
       if (params.category) products = products.filter(p => p.category_id === params.category);
       if (params.condition) products = products.filter(p => p.condition === params.condition);
-      if (params.minPrice) products = products.filter(p => p.price >= Number(params.minPrice));
-      if (params.maxPrice) products = products.filter(p => p.price <= Number(params.maxPrice));
+      if (params.minPrice) products = products.filter(p => Math.round(p.price * 120) >= Number(params.minPrice));
+      if (params.maxPrice) products = products.filter(p => Math.round(p.price * 120) <= Number(params.maxPrice));
       if (params.location) products = products.filter(p => (p.location || '').toLowerCase().includes(params.location.toLowerCase()));
 
       if (params.sort === 'price_asc' || params.sort === 'price_low') products.sort((a, b) => a.price - b.price);

@@ -11,6 +11,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import { FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaCar } from 'react-icons/fa';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { formatPrice } from '../utils/currency';
 
 const RideDetails = () => {
   const { id } = useParams();
@@ -90,7 +91,7 @@ const RideDetails = () => {
           </div>
 
           <div className="mt-6 pt-6 border-t border-navy-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <span className="text-2xl font-bold text-primary-600">${ride.fare_per_seat} / seat</span>
+            <span className="text-2xl font-bold text-primary-600">{formatPrice(ride.fare_per_seat)} / seat</span>
             {ride.driver_id !== user?.user_id && ride.seats_available > 0 && (
               <Button onClick={handleBook} isLoading={booking} className="w-full sm:w-auto">Book Now</Button>
             )}

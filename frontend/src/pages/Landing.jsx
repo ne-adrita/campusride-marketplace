@@ -7,6 +7,7 @@ import Avatar from '../components/ui/Avatar';
 import Rating from '../components/ui/Rating';
 import Badge from '../components/ui/Badge';
 import { landingFeatured, landingTrendingItems, landingTrendingRide, landingCampusRides, landingTestimonials, formatTimeAgo } from '../data';
+import { formatPrice } from '../utils/currency';
 
 const ProductPreview = ({ item }) => {
   const [imgError, setImgError] = useState(false);
@@ -29,7 +30,7 @@ const ProductPreview = ({ item }) => {
         </div>
         <h3 className="font-semibold text-navy-800 text-sm mb-1 truncate group-hover:text-primary-600 transition-colors">{item.title}</h3>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-lg font-bold text-primary-600">${item.price}</span>
+          <span className="text-lg font-bold text-primary-600">{formatPrice(item.price)}</span>
           <div className="flex items-center text-xs text-navy-400"><FaMapMarkerAlt className="mr-1" size={10} />{item.location}</div>
         </div>
         <div className="flex items-center justify-between pt-2 border-t border-navy-100">
@@ -71,7 +72,7 @@ const TrendingItem = ({ item }) => {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-navy-800 truncate">{item.title}</p>
-        <p className="text-sm font-bold text-primary-600">{item.price}</p>
+        <p className="text-sm font-bold text-primary-600">{typeof item.price === 'string' && item.price.startsWith('$') ? formatPrice(parseFloat(item.price.replace(/[^0-9.]/g, ''))) : formatPrice(item.price)}</p>
       </div>
     </div>
   );
@@ -96,7 +97,7 @@ const RidePreview = ({ ride }) => (
           <div className="flex items-center text-xs text-navy-400"><Rating value={ride.driver_rating} size="xs" /> <span className="ml-1">· {ride.vehicle_details}</span></div>
         </div>
       </div>
-      <span className="text-lg font-bold text-primary-600">${ride.fare_per_seat}</span>
+      <span className="text-lg font-bold text-primary-600">{formatPrice(ride.fare_per_seat)}</span>
     </div>
     <div className="flex items-center space-x-2 mb-3 text-sm">
       <div className="flex-1 text-right font-medium text-navy-700">{ride.origin}</div>
@@ -193,7 +194,7 @@ const Landing = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium text-navy-500">Ride to {landingTrendingRide.destination}</p>
-                      <p className="text-xs text-navy-400">{landingTrendingRide.time} · {landingTrendingRide.fare}</p>
+                      <p className="text-xs text-navy-400">{landingTrendingRide.time} · {formatPrice(parseFloat(String(landingTrendingRide.fare).replace(/[^0-9.]/g, '')) || 0)}</p>
                     </div>
                     <span className="text-xs font-semibold text-navy-500">{landingTrendingRide.seats}</span>
                   </div>

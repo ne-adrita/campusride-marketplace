@@ -5,6 +5,7 @@ import Avatar from '../ui/Avatar';
 import Rating from '../ui/Rating';
 import { FaCalendarAlt, FaUsers, FaCar } from 'react-icons/fa';
 import { format } from 'date-fns';
+import { formatPrice } from '../../utils/currency';
 
 const RideCard = ({ ride }) => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const RideCard = ({ ride }) => {
           </div>
         </div>
         <div className="text-right">
-          <p className="text-lg font-bold text-primary-600">${ride.fare_per_seat}</p>
+          <p className="text-lg font-bold text-primary-600">{formatPrice(ride.fare_per_seat)}</p>
           <p className="text-[10px] text-navy-400 font-medium">per seat</p>
         </div>
       </div>

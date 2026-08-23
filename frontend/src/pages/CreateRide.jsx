@@ -69,7 +69,7 @@ const CreateRide = () => {
             <Input label="Destination" placeholder="e.g., NSU Campus" error={errors.destination?.message} {...register('destination', sanitizeProps)} />
             <Input label="Date & Time" type="datetime-local" error={errors.date_time?.message} {...register('date_time')} />
             <Input label="Total Seats" type="number" error={errors.seats_total?.message} min="1" {...register('seats_total')} />
-            <Input label="Fare per Seat ($)" type="number" error={errors.fare_per_seat?.message} min="0" {...register('fare_per_seat')} />
+            <Input label="Fare per Seat (৳)" type="number" error={errors.fare_per_seat?.message} min="0" {...register('fare_per_seat')} />
             <Input label="Vehicle Details" placeholder="e.g., Toyota Axio, Blue" error={errors.vehicle_details?.message} {...register('vehicle_details', sanitizeProps)} />
             <Button type="submit" className="w-full" isLoading={loading}>Post Ride</Button>
           </form>

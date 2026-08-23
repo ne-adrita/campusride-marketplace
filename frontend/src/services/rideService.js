@@ -15,7 +15,7 @@ export async function getRides(params = {}) {
       if (params.origin) rides = rides.filter(r => r.origin.toLowerCase().includes(params.origin.toLowerCase()));
       if (params.destination) rides = rides.filter(r => r.destination.toLowerCase().includes(params.destination.toLowerCase()));
       if (params.date) rides = rides.filter(r => r.date_time.startsWith(params.date));
-      if (params.maxPrice) rides = rides.filter(r => r.fare_per_seat <= Number(params.maxPrice));
+      if (params.maxPrice) rides = rides.filter(r => Math.round(r.fare_per_seat * 120) <= Number(params.maxPrice));
 
       if (params.sort === 'price_asc' || params.sort === 'price_low') rides.sort((a, b) => a.fare_per_seat - b.fare_per_seat);
       else if (params.sort === 'price_desc' || params.sort === 'price_high') rides.sort((a, b) => b.fare_per_seat - a.fare_per_seat);

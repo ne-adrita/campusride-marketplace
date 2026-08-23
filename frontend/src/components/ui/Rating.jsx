@@ -15,17 +15,17 @@ const Rating = ({ value, max = 5, size = 'md', showValue = false }) => {
 
   return (
     <div className="flex items-center space-x-1">
-      <div className={`flex ${sizes[size]}`}>{stars}</div>
-      {showValue && <span className="text-gray-600 text-sm font-medium ml-1">{value.toFixed(1)}</span>}
+      <div className={`flex ${sizes[size] || sizes.md}`}>{stars}</div>
+      {showValue && <span className="text-gray-600 text-sm font-medium ml-1">{Number(value).toFixed(1)}</span>}
     </div>
   );
 };
 
 Rating.propTypes = {
-  value: PropTypes.number,
+  value: PropTypes.number.isRequired,
   max: PropTypes.number,
-  size: PropTypes.string,
+  size: PropTypes.oneOf(['xs', 'sm', 'md', 'lg']),
   showValue: PropTypes.bool,
 };
 
-export default Rating;
+export default React.memo(Rating);

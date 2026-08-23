@@ -19,8 +19,8 @@ const Avatar = ({ name, src = null, size = 'md', className = '' }) => {
 Avatar.propTypes = {
   name: PropTypes.string,
   src: PropTypes.string,
-  size: PropTypes.string,
+  size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl']),
   className: PropTypes.string,
 };
 
-export default Avatar;
+export default React.memo(Avatar);

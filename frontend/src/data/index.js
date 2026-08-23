@@ -1,7 +1,15 @@
 const STORAGE_PREFIX = 'campusride_';
-const IS_PREVIEW = import.meta.env.VITE_PREVIEW_MODE === 'true';
-
-export { IS_PREVIEW };
+const getEnv = (key, fallback) => {
+  try {
+    const val = import.meta.env?.[key];
+    return val !== undefined && val !== '' ? val : fallback;
+  } catch {
+    return fallback;
+  }
+};
+export const API_URL = getEnv('VITE_API_URL', 'http://localhost:5000/api');
+const previewRaw = getEnv('VITE_PREVIEW_MODE', null);
+export const IS_PREVIEW = previewRaw !== null ? String(previewRaw) === 'true' : true;
 
 export function loadJSON(key, fallback) {
   try {
@@ -11,15 +19,21 @@ export function loadJSON(key, fallback) {
 }
 
 export function saveJSON(key, data) {
-  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+  try {
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
+  } catch (e) { console.error('saveJSON failed', e); }
 }
 
 export function saveToken(token) {
-  localStorage.setItem(STORAGE_PREFIX + 'token', token);
+  try {
+    localStorage.setItem(STORAGE_PREFIX + 'token', token);
+  } catch (e) { console.error('saveToken failed', e); }
 }
 
 export function getToken() {
-  return localStorage.getItem(STORAGE_PREFIX + 'token');
+  try {
+    return localStorage.getItem(STORAGE_PREFIX + 'token');
+  } catch { return null; }
 }
 
 const now = new Date();

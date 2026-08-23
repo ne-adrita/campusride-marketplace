@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import Badge from '../ui/Badge';
 import Rating from '../ui/Rating';
 import Avatar from '../ui/Avatar';
-import { FaHeart, FaRegHeart, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaMapMarkerAlt, FaImage } from 'react-icons/fa';
 import { addToWishlist, removeFromWishlist } from '../../services/wishlistService';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
@@ -13,7 +13,8 @@ import { formatTimeAgo } from '../../data';
 const ProductCard = ({ product }) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [isInWishlist, setIsInWishlist] = React.useState(product.is_wishlisted || false);
+  const [isInWishlist, setIsInWishlist] = useState(product.is_wishlisted || false);
+  const [imgError, setImgError] = useState(false);
 
   const handleWishlist = async (e) => {
     e.preventDefault();
@@ -21,35 +22,57 @@ const ProductCard = ({ product }) => {
     if (!isAuthenticated) { toast.error('Please login to add to wishlist'); return; }
     try {
       if (isInWishlist) {
-        await removeFromWishlist(product.product_id);
+        const { error } = await removeFromWishlist(product.product_id);
+        if (error) { toast.error(error); return; }
         setIsInWishlist(false);
         toast.success('Removed from wishlist');
       } else {
-        await addToWishlist(product.product_id);
+        const { error } = await addToWishlist(product.product_id);
+        if (error) { toast.error(error); return; }
         setIsInWishlist(true);
         toast.success('Added to wishlist');
       }
     } catch (error) {
+      toast.error('Failed to update wishlist');
       setIsInWishlist(!isInWishlist);
+    }
+  };
+
+  const handleCardClick = () => navigate(`/product/${product.product_id}`);
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
     }
   };
 
   const timeAgo = formatTimeAgo(product.created_at);
 
   return (
-    <div className="surface-card-hover overflow-hidden group cursor-pointer relative" onClick={() => navigate(`/product/${product.product_id}`)}>
+    <div
+      className="surface-card-hover overflow-hidden group cursor-pointer relative focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl"
+      onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label={`View ${product.title}`}
+    >
       <div className="aspect-[4/3] bg-navy-100 overflow-hidden relative">
-        {product.image ? (
-          <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-navy-300">No image</div>'; }} />
+        {product.image && !imgError ? (
+          <img src={product.image} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImgError(true)} />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-navy-300">No image</div>
+          <div className="w-full h-full flex flex-col items-center justify-center text-navy-300 bg-navy-100">
+            <FaImage className="text-3xl mb-1" />
+            <span className="text-xs">No image</span>
+          </div>
         )}
         <div className="absolute top-3 left-3">
           <Badge variant={product.condition === 'New' || product.condition === 'Like New' ? 'success' : 'info'}>{product.condition}</Badge>
         </div>
         <button
           onClick={handleWishlist}
-          className="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-sm"
+          aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          className="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           {isInWishlist ? <FaHeart className="text-red-500" size={14} /> : <FaRegHeart className="text-navy-400" size={14} />}
         </button>
@@ -85,9 +108,9 @@ const ProductCard = ({ product }) => {
 
 ProductCard.propTypes = {
   product: PropTypes.shape({
-    product_id: PropTypes.string,
-    title: PropTypes.string,
-    price: PropTypes.number,
+    product_id: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    price: PropTypes.number.isRequired,
     condition: PropTypes.string,
     image: PropTypes.string,
     location: PropTypes.string,
@@ -95,7 +118,7 @@ ProductCard.propTypes = {
     seller_name: PropTypes.string,
     seller_rating: PropTypes.number,
     is_wishlisted: PropTypes.bool,
-  }),
+  }).isRequired,
 };
 
-export default ProductCard;
+export default React.memo(ProductCard);

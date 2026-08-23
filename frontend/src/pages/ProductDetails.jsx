@@ -9,7 +9,7 @@ import Rating from '../components/ui/Rating';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import { FaHeart, FaRegHeart, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaMapMarkerAlt, FaImage } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const ProductDetails = () => {
@@ -18,52 +18,82 @@ const ProductDetails = () => {
   const { isAuthenticated } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
+    setImgError(false);
     fetchProduct();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchProduct = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const { data } = await getProductById(id);
+      const { data, error: fetchError } = await getProductById(id);
+      if (fetchError) {
+        setError(fetchError);
+        toast.error(fetchError);
+        return;
+      }
+      if (!data) {
+        setError('Product not found');
+        return;
+      }
       setProduct(data);
       if (isAuthenticated) {
-        try {
-          const { data: wl } = await getWishlist();
-          setIsInWishlist(wl.some(item => item.product_id === id));
-        } catch { /* not authenticated */ }
+        const { data: wl, error: wlErr } = await getWishlist();
+        if (!wlErr && wl) setIsInWishlist(wl.some(item => item.product_id === id));
       }
-    } catch (error) { navigate('/marketplace'); }
-    finally { setLoading(false); }
+    } catch (err) {
+      console.error('fetchProduct failed', err);
+      setError(err.message || 'Failed to load product');
+      toast.error('Failed to load product');
+    } finally { setLoading(false); }
   };
 
   const toggleWishlist = async () => {
     if (!isAuthenticated) { toast.error('Please login to add items to wishlist'); return; }
     setWishlistLoading(true);
     try {
-      if (isInWishlist) { await removeFromWishlist(id); toast.success('Removed from wishlist'); }
-      else { await addToWishlist(id); toast.success('Added to wishlist'); }
+      if (isInWishlist) {
+        const { error } = await removeFromWishlist(id);
+        if (error) { toast.error(error); return; }
+        toast.success('Removed from wishlist');
+      } else {
+        const { error } = await addToWishlist(id);
+        if (error) { toast.error(error); return; }
+        toast.success('Added to wishlist');
+      }
       setIsInWishlist(!isInWishlist);
-    } catch (error) { console.error('Error toggling wishlist:', error); }
-    finally { setWishlistLoading(false); }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      toast.error('Failed to update wishlist');
+    } finally { setWishlistLoading(false); }
   };
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <div className="container-custom py-8"><div className="surface-card p-8 text-center"><p className="text-red-600 mb-2">{error}</p><button onClick={() => navigate('/marketplace')} className="btn-primary mt-2">Back to Marketplace</button></div></div>;
   if (!product) return <div className="container-custom py-8"><div className="surface-card p-8 text-center text-navy-400">Product not found</div></div>;
 
   return (
     <div className="min-h-screen bg-navy-50 py-8">
       <div className="container-custom">
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="flex flex-col lg:grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
             <Card className="overflow-hidden rounded-2xl">
               <div className="aspect-[4/3] bg-navy-100">
-                {product.image ? <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
-                : <div className="w-full h-full flex items-center justify-center text-navy-300">No image available</div>}
+                {product.image && !imgError ? (
+                  <img src={product.image} alt={product.title} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-navy-300 bg-navy-100">
+                    <FaImage className="text-4xl mb-2" />
+                    <span className="text-sm">No image available</span>
+                  </div>
+                )}
               </div>
             </Card>
           </div>
@@ -78,7 +108,7 @@ const ProductDetails = () => {
                     <div className="flex items-center text-sm text-navy-400"><FaMapMarkerAlt className="mr-1" />{product.location || 'Campus'}</div>
                   </div>
                 </div>
-                <button onClick={toggleWishlist} disabled={wishlistLoading} className="p-2 rounded-full hover:bg-navy-50 transition">
+                <button onClick={toggleWishlist} disabled={wishlistLoading} aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'} className="p-2 rounded-full hover:bg-navy-50 transition focus-visible:ring-2 focus-visible:ring-primary-500">
                   {isInWishlist ? <FaHeart className="text-red-500 text-xl" /> : <FaRegHeart className="text-navy-300 text-xl" />}
                 </button>
               </div>
@@ -94,7 +124,7 @@ const ProductDetails = () => {
               <div className="flex items-center space-x-4">
                 <Avatar name={product.seller_name} size="lg" />
                 <div className="flex-1">
-                  <Link to={`/profile/${product.seller_id}`} className="font-medium text-navy-700 hover:text-primary-600">{product.seller_name}</Link>
+                  <Link to={`/profile/${product.seller_id}`} className="font-medium text-navy-700 hover:text-primary-600 focus-visible:ring-2 focus-visible:ring-primary-500 rounded">{product.seller_name}</Link>
                   <Rating value={product.seller_rating || 0} size="sm" showValue />
                 </div>
                 {product.seller_verified && <Badge variant="success">Verified</Badge>}

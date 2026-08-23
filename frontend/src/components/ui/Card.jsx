@@ -10,7 +10,7 @@ const Card = ({ children, className = '', hoverable = false }) => {
 };
 
 Card.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
   className: PropTypes.string,
   hoverable: PropTypes.bool,
 };
@@ -20,7 +20,7 @@ const CardHeader = ({ children, className = '' }) => (
 );
 
 CardHeader.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
@@ -29,7 +29,7 @@ const CardBody = ({ children, className = '' }) => (
 );
 
 CardBody.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 
@@ -38,7 +38,7 @@ const CardFooter = ({ children, className = '' }) => (
 );
 
 CardFooter.propTypes = {
-  children: PropTypes.node,
+  children: PropTypes.node.isRequired,
   className: PropTypes.string,
 };
 

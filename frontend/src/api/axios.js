@@ -1,17 +1,22 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const IS_PREVIEW = import.meta.env.VITE_PREVIEW_MODE === 'true';
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+const getEnv = (key, fallback) => {
+  try {
+    const val = import.meta.env?.[key];
+    return val !== undefined && val !== '' ? val : fallback;
+  } catch {
+    return fallback;
+  }
+};
+const IS_PREVIEW = String(getEnv('VITE_PREVIEW_MODE', 'true')) === 'true';
+const VITE_API_URL = getEnv('VITE_API_URL', 'http://localhost:5000/api');
 
 if (IS_PREVIEW) {
   console.info('[Preview Mode] Using local mock data. No backend required.');
 }
 
 if (!VITE_API_URL) {
-  if (import.meta.env.PROD) {
-    throw new Error('VITE_API_URL environment variable is required in production. Set it in your deployment environment.');
-  }
   console.warn('VITE_API_URL not set. Using development default http://localhost:5000/api');
 }
 
@@ -26,9 +31,13 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('campusride_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = localStorage.getItem('campusride_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (e) {
+      console.error('Failed to read token', e);
     }
     return config;
   },
@@ -38,12 +47,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (!error.response) return Promise.reject(error);
+    if (!error.response) {
+      console.error('Network error:', error.message);
+      toast.error('Network error. Please check your connection.');
+      return Promise.reject(error);
+    }
 
     const message = error.response?.data?.message || 'Something went wrong';
 
     if (error.response?.status === 401) {
-      localStorage.removeItem('campusride_token');
+      try { localStorage.removeItem('campusride_token'); } catch {}
       window.location.href = '/login';
     }
 

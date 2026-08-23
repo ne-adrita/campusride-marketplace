@@ -13,8 +13,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (IS_PREVIEW) {
       initData();
-      authService.getMe().then(({ data }) => {
-        setUser({ ...data, user_id: data.user_id });
+      authService.getMe().then(({ data, error }) => {
+        if (error) {
+          console.error('getMe failed:', error);
+          setLoading(false);
+          return;
+        }
+        if (data) setUser({ ...data, user_id: data.user_id });
+        setLoading(false);
+      }).catch((err) => {
+        console.error('getMe failed:', err);
         setLoading(false);
       });
       return;
@@ -29,9 +37,15 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
-      const { data } = await authService.getMe();
+      const { data, error } = await authService.getMe();
+      if (error || !data) {
+        console.error('loadUser error:', error);
+        if (error?.includes('401') || error?.toLowerCase().includes('unauthorized')) logout();
+        return;
+      }
       setUser({ ...data, user_id: data.user_id || data._id || data.id });
     } catch (error) {
+      console.error('loadUser exception:', error);
       if (error?.response?.status === 401) logout();
     } finally {
       setLoading(false);
@@ -44,6 +58,8 @@ export const AuthProvider = ({ children }) => {
       const userData = { ...result.data.user, user_id: result.data.user.user_id || result.data.user._id || result.data.user.id };
       setUser(userData);
       toast.success('Welcome back!');
+    } else {
+      toast.error(result.error || 'Login failed');
     }
     return result;
   };
@@ -54,6 +70,8 @@ export const AuthProvider = ({ children }) => {
       const userData = { ...result.data.user, user_id: result.data.user.user_id || result.data.user._id || result.data.user.id };
       setUser(userData);
       toast.success('Registration successful!');
+    } else {
+      toast.error(result.error || 'Registration failed');
     }
     return result;
   };

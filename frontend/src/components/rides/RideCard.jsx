@@ -19,8 +19,15 @@ const RideCard = ({ ride }) => {
     navigate(`/ride/${ride.ride_id}`);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCardClick();
+    }
+  };
+
   return (
-    <div className="surface-card-hover p-4 group cursor-pointer" onClick={handleCardClick}>
+    <div className="surface-card-hover p-4 group cursor-pointer focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl" onClick={handleCardClick} role="button" tabIndex={0} onKeyDown={handleKeyDown} aria-label={`Ride from ${ride.origin} to ${ride.destination}`}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2.5">
@@ -73,7 +80,7 @@ const RideCard = ({ ride }) => {
 
       {/* Book CTA */}
       {ride.seats_available > 0 ? (
-        <button onClick={handleBook} className="w-full py-2.5 bg-primary-500 text-white rounded-xl text-sm font-semibold hover:bg-primary-600 active:bg-primary-700 transition-all shadow-sm">
+        <button onClick={handleBook} className="w-full py-2.5 bg-primary-500 text-white rounded-xl text-sm font-semibold hover:bg-primary-600 active:bg-primary-700 transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-primary-500">
           Book ride
         </button>
       ) : (
@@ -87,17 +94,17 @@ const RideCard = ({ ride }) => {
 
 RideCard.propTypes = {
   ride: PropTypes.shape({
-    ride_id: PropTypes.string,
+    ride_id: PropTypes.string.isRequired,
     driver_name: PropTypes.string,
     driver_rating: PropTypes.number,
     vehicle_details: PropTypes.string,
-    fare_per_seat: PropTypes.number,
-    origin: PropTypes.string,
-    destination: PropTypes.string,
+    fare_per_seat: PropTypes.number.isRequired,
+    origin: PropTypes.string.isRequired,
+    destination: PropTypes.string.isRequired,
     date_time: PropTypes.string,
     seats_available: PropTypes.number,
     seats_total: PropTypes.number,
-  }),
+  }).isRequired,
 };
 
-export default RideCard;
+export default React.memo(RideCard);

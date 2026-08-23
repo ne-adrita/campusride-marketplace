@@ -10,6 +10,7 @@ import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import { FaCalendarAlt, FaEnvelope } from 'react-icons/fa';
 import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const Profile = () => {
   const { id } = useParams();
@@ -18,6 +19,7 @@ const Profile = () => {
   const [profileUser, setProfileUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const isOwnProfile = !id || id === user?.user_id;
 
   useEffect(() => {
@@ -29,18 +31,32 @@ const Profile = () => {
 
   const fetchProfile = async (userId) => {
     setLoading(true);
+    setError(null);
     try {
       const [userRes, listingsRes] = await Promise.all([
         getUserById(userId),
         getUserListings(userId),
       ]);
+      if (userRes.error) {
+        setError(userRes.error);
+        toast.error(userRes.error);
+        return;
+      }
       setProfileUser(userRes.data);
-      setListings(listingsRes.data || []);
-    } catch (error) { console.error('Error fetching profile:', error); navigate('/dashboard'); }
-    finally { setLoading(false); }
+      if (listingsRes.error) {
+        console.error(listingsRes.error);
+      } else {
+        setListings(listingsRes.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError('Failed to load profile');
+      toast.error('Failed to load profile');
+    } finally { setLoading(false); }
   };
 
   if (loading) return <LoadingSpinner />;
+  if (error) return <div className="container-custom py-8"><div className="surface-card p-8 text-center"><p className="text-red-600">{error}</p><button onClick={() => navigate('/dashboard')} className="btn-primary mt-4">Back to Dashboard</button></div></div>;
   if (!profileUser) return <div className="container-custom py-8"><div className="surface-card p-8 text-center text-navy-400">User not found</div></div>;
 
   return (
@@ -48,7 +64,7 @@ const Profile = () => {
       <div className="container-custom">
         <Card className="overflow-hidden">
           <div className="h-48 bg-gradient-to-r from-primary-500 to-primary-700 relative">
-            {isOwnProfile && <Button variant="secondary" className="absolute top-4 right-4 bg-white/90 hover:bg-white" onClick={() => navigate('/settings')}>Edit Profile</Button>}
+            {isOwnProfile && <Button variant="secondary" className="absolute top-4 right-4 bg-white/90 hover:bg-white focus-visible:ring-2 focus-visible:ring-white w-full sm:w-auto" onClick={() => navigate('/settings')}>Edit Profile</Button>}
           </div>
           <div className="px-6 pb-6">
             <div className="flex flex-col md:flex-row items-start md:items-center -mt-12 mb-4">
@@ -63,8 +79,8 @@ const Profile = () => {
                 </div>
               </div>
               {!isOwnProfile && (
-                <div className="mt-4 md:mt-8 md:ml-auto">
-                  <Button onClick={() => navigate(`/messages?user=${profileUser.user_id}`)} className="flex items-center space-x-2">
+                <div className="mt-4 md:mt-8 md:ml-auto w-full md:w-auto">
+                  <Button onClick={() => navigate(`/messages?user=${profileUser.user_id}`)} className="flex items-center justify-center space-x-2 w-full md:w-auto">
                     <FaEnvelope size={16} /><span>Message</span>
                   </Button>
                 </div>
@@ -81,7 +97,7 @@ const Profile = () => {
               <div className="mt-6"><h3 className="font-semibold text-sm text-navy-700">About</h3><p className="text-navy-400 mt-1">{profileUser.bio}</p></div>
             )}
             <div className="mt-4 flex items-center space-x-2 text-sm text-navy-400">
-              <FaCalendarAlt size={14} /><span>Member since {format(new Date(profileUser.created_at), 'MMMM yyyy')}</span>
+              <FaCalendarAlt size={14} /><span>Member since {profileUser.created_at ? format(new Date(profileUser.created_at), 'MMMM yyyy') : 'Unknown'}</span>
             </div>
           </div>
         </Card>

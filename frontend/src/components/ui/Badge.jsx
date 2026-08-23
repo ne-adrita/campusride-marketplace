@@ -12,16 +12,16 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
   };
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variants[variant] || variants.default} ${className}`}>
       {children}
     </span>
   );
 };
 
 Badge.propTypes = {
-  children: PropTypes.node,
-  variant: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  variant: PropTypes.oneOf(['default', 'success', 'warning', 'danger', 'info', 'primary']),
   className: PropTypes.string,
 };
 
-export default Badge;
+export default React.memo(Badge);

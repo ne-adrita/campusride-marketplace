@@ -1,43 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaShieldAlt, FaComment, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaSearch, FaBell, FaCar, FaArrowRight, FaQuoteLeft, FaCheckCircle } from 'react-icons/fa';
+import { FaShieldAlt, FaComment, FaStar, FaMapMarkerAlt, FaCalendarAlt, FaUsers, FaSearch, FaBell, FaCar, FaArrowRight, FaQuoteLeft, FaCheckCircle, FaImage } from 'react-icons/fa';
 import Avatar from '../components/ui/Avatar';
 import Rating from '../components/ui/Rating';
 import Badge from '../components/ui/Badge';
 import { landingFeatured, landingTrendingItems, landingTrendingRide, landingCampusRides, landingTestimonials, formatTimeAgo } from '../data';
 
-const ProductPreview = ({ item }) => (
-  <Link to={`/product/${item.product_id}`} className="surface-card-hover overflow-hidden group cursor-pointer">
-    <div className="aspect-[4/3] bg-navy-100 overflow-hidden">
-      {item.image ? (
-        <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-navy-300">No image</div>'; }} />
-      ) : (
-        <div className="w-full h-full flex items-center justify-center text-navy-300">No image</div>
-      )}
-    </div>
-    <div className="p-4">
-      <div className="flex items-start justify-between mb-2">
-        <Badge variant={item.condition === 'Like New' || item.condition === 'New' ? 'success' : 'info'}>{item.condition}</Badge>
-        <span className="text-xs text-navy-400">{formatTimeAgo(item.created_at)}</span>
+const ProductPreview = ({ item }) => {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <Link to={`/product/${item.product_id}`} className="surface-card-hover overflow-hidden group cursor-pointer focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl block">
+      <div className="aspect-[4/3] bg-navy-100 overflow-hidden">
+        {item.image && !imgError ? (
+          <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImgError(true)} />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-navy-300 bg-navy-100">
+            <FaImage className="text-2xl mb-1" />
+            <span className="text-xs">No image</span>
+          </div>
+        )}
       </div>
-      <h3 className="font-semibold text-navy-800 text-sm mb-1 truncate group-hover:text-primary-600 transition-colors">{item.title}</h3>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-lg font-bold text-primary-600">${item.price}</span>
-        <div className="flex items-center text-xs text-navy-400"><FaMapMarkerAlt className="mr-1" size={10} />{item.location}</div>
-      </div>
-      <div className="flex items-center justify-between pt-2 border-t border-navy-100">
-        <div className="flex items-center space-x-2">
-          <Avatar name={item.seller_name} size="sm" />
-          <span className="text-xs font-medium text-navy-600">{item.seller_name}</span>
+      <div className="p-4">
+        <div className="flex items-start justify-between mb-2">
+          <Badge variant={item.condition === 'Like New' || item.condition === 'New' ? 'success' : 'info'}>{item.condition}</Badge>
+          <span className="text-xs text-navy-400">{formatTimeAgo(item.created_at)}</span>
         </div>
-        <Rating value={item.seller_rating} size="xs" showValue />
+        <h3 className="font-semibold text-navy-800 text-sm mb-1 truncate group-hover:text-primary-600 transition-colors">{item.title}</h3>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-lg font-bold text-primary-600">${item.price}</span>
+          <div className="flex items-center text-xs text-navy-400"><FaMapMarkerAlt className="mr-1" size={10} />{item.location}</div>
+        </div>
+        <div className="flex items-center justify-between pt-2 border-t border-navy-100">
+          <div className="flex items-center space-x-2">
+            <Avatar name={item.seller_name} size="sm" />
+            <span className="text-xs font-medium text-navy-600">{item.seller_name}</span>
+          </div>
+          <Rating value={item.seller_rating} size="xs" showValue />
+        </div>
       </div>
-    </div>
-  </Link>
-);
-
-import PropTypes from 'prop-types';
+    </Link>
+  );
+};
 
 ProductPreview.propTypes = {
   item: PropTypes.shape({
@@ -53,8 +58,36 @@ ProductPreview.propTypes = {
   }),
 };
 
+const TrendingItem = ({ item }) => {
+  const [imgError, setImgError] = useState(false);
+  return (
+    <div className="flex items-center space-x-3 p-2 rounded-xl hover:bg-navy-50 transition-colors cursor-pointer">
+      <div className="w-16 h-16 rounded-xl bg-navy-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+        {item.image && !imgError ? (
+          <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+        ) : (
+          <FaImage className="text-navy-300" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-navy-800 truncate">{item.title}</p>
+        <p className="text-sm font-bold text-primary-600">{item.price}</p>
+      </div>
+    </div>
+  );
+};
+TrendingItem.propTypes = {
+  item: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+    price: PropTypes.string,
+    image: PropTypes.string,
+    badge: PropTypes.string,
+  }),
+};
+
 const RidePreview = ({ ride }) => (
-  <Link to={`/ride/${ride.ride_id}`} className="surface-card-hover p-4 group cursor-pointer">
+  <Link to={`/ride/${ride.ride_id}`} className="surface-card-hover p-4 group cursor-pointer focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-2xl block">
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center space-x-2">
         <Avatar name={ride.driver_name} size="sm" />
@@ -80,7 +113,7 @@ const RidePreview = ({ ride }) => (
       <span><FaCalendarAlt className="inline mr-1" size={10} />{new Date(ride.date_time).toLocaleString('en-US', { weekday: 'short', month: 'short', d: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
       <span className={ride.seats_available > 0 ? 'text-success-600' : 'text-red-500'}><FaUsers className="inline mr-1" size={10} />{ride.seats_available}/{ride.seats_total}</span>
     </div>
-    <button onClick={(e) => { e.preventDefault(); window.location.href = `/ride/${ride.ride_id}`; }} className="mt-3 w-full py-2 bg-primary-50 text-primary-600 rounded-xl text-sm font-semibold hover:bg-primary-100 transition-colors">
+    <button onClick={(e) => { e.preventDefault(); window.location.href = `/ride/${ride.ride_id}`; }} className="mt-3 w-full py-2 bg-primary-50 text-primary-600 rounded-xl text-sm font-semibold hover:bg-primary-100 transition-colors focus-visible:ring-2 focus-visible:ring-primary-500">
       Book ride
     </button>
   </Link>
@@ -110,9 +143,9 @@ const Landing = () => {
       <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-primary-50/60 pt-20 pb-16 md:pt-28 md:pb-20">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary-400/10 rounded-full blur-3xl pointer-events-none" />
         <div className="container-custom relative z-10">
-          <div className="grid md:grid-cols-5 gap-10 items-center">
+          <div className="flex flex-col md:grid md:grid-cols-5 gap-10 items-center">
             {/* Left */}
-            <div className="md:col-span-3">
+            <div className="md:col-span-3 w-full">
               <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-primary-50 text-primary-600 rounded-full text-xs font-semibold mb-5 border border-primary-200">
                 <FaCheckCircle size={12} />
                 <span>Exclusive to verified students</span>
@@ -139,7 +172,7 @@ const Landing = () => {
             </div>
 
             {/* Right — Trending panel */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 w-full">
               <div className="surface-card p-5 relative">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-navy-700 uppercase tracking-wider">Trending on campus</h3>
@@ -150,15 +183,7 @@ const Landing = () => {
                 </div>
                 <div className="space-y-3">
                   {landingTrendingItems.map(item => (
-                    <div key={item.id} className="flex items-center space-x-3 p-2 rounded-xl hover:bg-navy-50 transition-colors cursor-pointer">
-                      <div className="w-16 h-16 rounded-xl bg-navy-100 overflow-hidden flex-shrink-0">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center text-navy-300">No image</div>'; }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-navy-800 truncate">{item.title}</p>
-                        <p className="text-sm font-bold text-primary-600">{item.price}</p>
-                      </div>
-                    </div>
+                    <TrendingItem key={item.id} item={item} />
                   ))}
                 </div>
                 <div className="mt-3 pt-3 border-t border-navy-100">
@@ -329,8 +354,8 @@ const Landing = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">Ready to join your campus community?</h2>
           <p className="text-lg text-navy-300 mb-8">It takes 60 seconds. Verified students only.</p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Link to="/register" className="px-8 py-3 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 transition-all">Create account</Link>
-            <Link to="/dashboard" className="px-8 py-3 bg-white/10 text-white border border-navy-600 rounded-xl font-semibold hover:bg-white/20 transition-all">See dashboard demo</Link>
+            <Link to="/register" className="px-8 py-3 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 transition-all focus-visible:ring-2 focus-visible:ring-white">Create account</Link>
+            <Link to="/dashboard" className="px-8 py-3 bg-white/10 text-white border border-navy-600 rounded-xl font-semibold hover:bg-white/20 transition-all focus-visible:ring-2 focus-visible:ring-white">See dashboard demo</Link>
           </div>
         </div>
       </section>

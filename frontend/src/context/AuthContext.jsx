@@ -42,6 +42,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    if (!email.trim().toLowerCase().endsWith('@northsouth.edu')) {
+      return { success: false, error: 'Login is restricted to @northsouth.edu emails.' };
+    }
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       toast.success('Welcome back!');
@@ -55,6 +59,10 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, studentId, password) => {
+    if (!email.trim().toLowerCase().endsWith('@northsouth.edu')) {
+      return { success: false, error: 'Registration is restricted to @northsouth.edu emails.' };
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const firebaseUid = userCredential.user.uid;

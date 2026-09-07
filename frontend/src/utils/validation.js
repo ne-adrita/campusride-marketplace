@@ -1,15 +1,31 @@
 import { z } from 'zod';
 
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
-  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
+  email: z.string()
+    .min(1, 'Email is required')
+    .email('Invalid email address')
+    .refine((val) => val.trim().toLowerCase().endsWith('@northsouth.edu'), {
+      message: 'You must use a valid @northsouth.edu email address',
+    }),
+  password: z.string()
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters'),
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(1, 'Full name is required').min(2, 'Name must be at least 2 characters'),
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  name: z.string()
+    .min(1, 'Full name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  email: z.string()
+    .min(1, 'Email is required')
+    .email('Invalid email address')
+    .refine((val) => val.trim().toLowerCase().endsWith('@northsouth.edu'), {
+      message: 'You must use a valid @northsouth.edu email address',
+    }),
   studentId: z.string().min(1, 'Student ID is required'),
-  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(1, 'Password is required')
+    .min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Passwords do not match',

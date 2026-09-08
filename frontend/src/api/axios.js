@@ -1,5 +1,6 @@
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { auth } from '../services/firebase';
 
 const getEnv = (key, fallback) => {
   try {
@@ -29,15 +30,18 @@ const api = axios.create({
   },
 });
 
+// Firebase ID tokens expire after an hour, so we can't just read one out of
+// storage - ask the SDK for the current one on every request and it silently
+// refreshes for us when needed.
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     try {
-      const token = localStorage.getItem('campusride_token');
+      const token = await auth.currentUser?.getIdToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (e) {
-      console.error('Failed to read token', e);
+      console.error('Failed to get Firebase ID token', e);
     }
     return config;
   },
@@ -56,7 +60,6 @@ api.interceptors.response.use(
     const message = error.response?.data?.message || 'Something went wrong';
 
     if (error.response?.status === 401) {
-      try { localStorage.removeItem('campusride_token'); } catch {}
       window.location.href = '/login';
     }
 

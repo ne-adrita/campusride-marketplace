@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { register, login, getMe } from '../controllers/authController.js';
-import { protect } from '../middleware/auth.js';
+import { register, getMe } from '../controllers/authController.js';
+import { protect, requireFirebaseToken } from '../middleware/auth.js';
 
 const router = Router();
 
-router.post('/register', register);
-router.post('/login', login);
+// No login route: the frontend's Firebase Auth SDK handles sign-in directly
+// (signInWithEmailAndPassword) and never talks to this backend for it.
+router.post('/register', requireFirebaseToken, register);
 router.get('/me', protect, getMe);
 
 export default router;

@@ -1,46 +1,48 @@
-import { db, findUserById, sanitizeUser } from '../data/store.js';
-import { generateId } from '../utils/ids.js';
+import mongoose from 'mongoose';
+import Message from '../models/Message.js';
+import User from '../models/User.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 // GET /api/messages/conversations  (auth)
 // Derives the list of people the current user has exchanged messages with,
 // plus a preview of the last message - there's no separate "conversations"
-// table, it's computed from the flat `messages` list.
+// collection, it's computed from the flat `messages` collection.
 export const getConversations = asyncHandler(async (req, res) => {
-  const myId = req.user.user_id;
-  const otherIds = new Set();
-  db.messages.forEach((m) => {
-    if (m.sender_id === myId) otherIds.add(m.receiver_id);
-    if (m.receiver_id === myId) otherIds.add(m.sender_id);
-  });
+  const myId = new mongoose.Types.ObjectId(req.user.user_id);
 
-  const conversations = [...otherIds].map((otherId) => {
-    const thread = db.messages
-      .filter((m) => (m.sender_id === myId && m.receiver_id === otherId) || (m.sender_id === otherId && m.receiver_id === myId))
-      .sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
-    const last = thread[thread.length - 1];
-    const other = findUserById(otherId);
+  const thread = await Message.find({ $or: [{ sender_id: myId }, { receiver_id: myId }] }).sort({ sent_at: 1 });
+
+  const byOther = new Map();
+  for (const m of thread) {
+    const otherId = m.sender_id.equals(myId) ? m.receiver_id.toString() : m.sender_id.toString();
+    byOther.set(otherId, m); // sorted ascending, so the last write wins = most recent message
+  }
+
+  const others = await User.find({ _id: { $in: [...byOther.keys()] } });
+  const conversations = others.map((u) => {
+    const last = byOther.get(u._id.toString());
     return {
-      user_id: otherId,
-      name: other?.name || 'Unknown user',
-      profile_pic: other?.avatar || null,
-      last_message: last?.content || 'No messages',
-      last_message_at: last?.sent_at || null,
+      user_id: u._id.toString(),
+      name: u.name,
+      profile_pic: u.avatar,
+      last_message: last.content,
+      last_message_at: last.sent_at,
     };
   });
 
-  conversations.sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0));
+  conversations.sort((a, b) => new Date(b.last_message_at) - new Date(a.last_message_at));
   res.json(conversations);
 });
 
 // GET /api/messages/:userId  (auth) - full thread between me and :userId
 export const getMessages = asyncHandler(async (req, res) => {
+  if (!mongoose.isValidObjectId(req.params.userId)) return res.json([]);
   const myId = req.user.user_id;
   const otherId = req.params.userId;
 
-  const thread = db.messages
-    .filter((m) => (m.sender_id === myId && m.receiver_id === otherId) || (m.sender_id === otherId && m.receiver_id === myId))
-    .sort((a, b) => new Date(a.sent_at) - new Date(b.sent_at));
+  const thread = await Message.find({
+    $or: [{ sender_id: myId, receiver_id: otherId }, { sender_id: otherId, receiver_id: myId }],
+  }).sort({ sent_at: 1 });
 
   res.json(thread);
 });
@@ -51,17 +53,14 @@ export const sendMessage = asyncHandler(async (req, res) => {
   if (!receiver_id || !content) {
     return res.status(400).json({ message: 'receiver_id and content are required' });
   }
-  if (!findUserById(receiver_id)) {
+  if (!mongoose.isValidObjectId(receiver_id) || !(await User.exists({ _id: receiver_id }))) {
     return res.status(404).json({ message: 'Recipient not found' });
   }
 
-  const message = {
-    message_id: generateId('msg_'),
+  const message = await Message.create({
     sender_id: req.user.user_id,
     receiver_id,
     content,
-    sent_at: new Date().toISOString(),
-  };
-  db.messages.push(message);
+  });
   res.status(201).json(message);
 });

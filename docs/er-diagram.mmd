@@ -1,0 +1,86 @@
+erDiagram
+    USER ||--o{ PRODUCT : "lists (seller_id)"
+    USER ||--o{ RIDE : "drives (driver_id)"
+    USER ||--o{ MESSAGE : "sends (sender_id)"
+    USER ||--o{ MESSAGE : "receives (receiver_id)"
+    USER ||--o{ PAYMENT : "pays (user_id)"
+    USER }o--o{ PRODUCT : "wishlists (array of refs)"
+    CATEGORY ||--o{ PRODUCT : "categorizes (soft ref by id string)"
+
+    USER {
+        ObjectId _id PK
+        string firebaseUid UK
+        string name
+        string email UK
+        string studentId
+        boolean verified
+        string role
+        number rating_avg
+        number ride_count
+        string phone
+        string bio
+        string avatar
+        date created_at
+    }
+
+    CATEGORY {
+        ObjectId _id PK
+        string name UK
+    }
+
+    PRODUCT {
+        ObjectId _id PK
+        string title
+        number price
+        string condition
+        string description
+        string location
+        string category_id FK
+        string image
+        ObjectId seller_id FK
+        string seller_name
+        number seller_rating
+        boolean seller_verified
+        date created_at
+    }
+
+    RIDE {
+        ObjectId _id PK
+        string origin
+        string destination
+        string date_time
+        number seats_total
+        number seats_available
+        number fare_per_seat
+        string vehicle_details
+        string notes
+        string status
+        ObjectId driver_id FK
+        string driver_name
+        number driver_rating
+    }
+
+    MESSAGE {
+        ObjectId _id PK
+        ObjectId sender_id FK
+        ObjectId receiver_id FK
+        string content
+        date sent_at
+    }
+
+    PAYMENT {
+        ObjectId _id PK
+        ObjectId user_id FK
+        number amount
+        number bdtAmount
+        string currency
+        string itemId
+        string itemType
+        string method
+        string provider
+        string phone
+        string status
+        string transactionId
+        date confirmedAt
+        date created
+    }

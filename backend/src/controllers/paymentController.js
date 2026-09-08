@@ -1,5 +1,4 @@
-import { db } from '../data/store.js';
-import { generateId } from '../utils/ids.js';
+import Payment from '../models/Payment.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 // This is a MOCK payment gateway (no Stripe / bKash calls happen here) so you
@@ -9,10 +8,6 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 
 const MOBILE_PROVIDERS = { bkash: 'bKash', nagad: 'Nagad', rocket: 'Rocket' };
 
-function myPayments(req) {
-  return db.payments[req.user.user_id] || (db.payments[req.user.user_id] = []);
-}
-
 // POST /api/payments/intent  (auth)
 export const createPaymentIntent = asyncHandler(async (req, res) => {
   const { amount, currency = 'BDT', itemId, itemType, method } = req.body;
@@ -20,8 +15,8 @@ export const createPaymentIntent = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'amount, itemId and itemType are required' });
   }
 
-  const payment = {
-    id: generateId('pay_'),
+  const payment = await Payment.create({
+    user_id: req.user.user_id,
     amount,
     currency,
     itemId,
@@ -29,9 +24,7 @@ export const createPaymentIntent = asyncHandler(async (req, res) => {
     method: method || 'card',
     status: 'requires_confirmation',
     clientSecret: 'pi_mock_secret_' + Math.random().toString(36).slice(2, 12),
-    created: new Date().toISOString(),
-  };
-  myPayments(req).unshift(payment);
+  });
   res.status(201).json(payment);
 });
 
@@ -48,13 +41,13 @@ export const confirmCardPayment = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Invalid CVC' });
   }
 
-  const payments = myPayments(req);
-  const payment = payments.find((p) => p.id === req.params.paymentId);
+  const payment = await Payment.findOne({ _id: req.params.paymentId, user_id: req.user.user_id });
   if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
   payment.status = 'succeeded';
-  payment.confirmedAt = new Date().toISOString();
+  payment.confirmedAt = new Date();
   payment.cardLast4 = cardDetails.number.slice(-4);
+  await payment.save();
   res.json(payment);
 });
 
@@ -75,8 +68,8 @@ export const processMobileBanking = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: 'Incorrect PIN. Try 1234 for demo.' });
   }
 
-  const payment = {
-    id: generateId('pay_'),
+  const payment = await Payment.create({
+    user_id: req.user.user_id,
     amount,
     bdtAmount: amount,
     currency: 'BDT',
@@ -87,21 +80,19 @@ export const processMobileBanking = asyncHandler(async (req, res) => {
     phone,
     status: 'succeeded',
     transactionId: `${method.toUpperCase()}${Date.now().toString().slice(-8)}`,
-    created: new Date().toISOString(),
-    confirmedAt: new Date().toISOString(),
-  };
-  myPayments(req).unshift(payment);
+    confirmedAt: new Date(),
+  });
   res.status(201).json(payment);
 });
 
 // GET /api/payments  (auth)
 export const getPayments = asyncHandler(async (req, res) => {
-  res.json(myPayments(req));
+  res.json(await Payment.find({ user_id: req.user.user_id }).sort({ created: -1 }));
 });
 
 // GET /api/payments/:id  (auth)
 export const getPaymentById = asyncHandler(async (req, res) => {
-  const payment = myPayments(req).find((p) => p.id === req.params.id);
+  const payment = await Payment.findOne({ _id: req.params.id, user_id: req.user.user_id });
   if (!payment) return res.status(404).json({ message: 'Payment not found' });
   res.json(payment);
 });

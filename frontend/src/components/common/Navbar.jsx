@@ -1,25 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaEnvelope, FaUser, FaSignOutAlt, FaCog, FaHeart, FaSun, FaMoon, FaBars, FaTimes, FaPlus, FaGraduationCap } from 'react-icons/fa';
+import { FaEnvelope, FaUser, FaSignOutAlt, FaCog, FaHeart, FaBars, FaTimes, FaPlus, FaGraduationCap } from 'react-icons/fa';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated, isVerified, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDark, setIsDark] = useState(() => {
-    if (typeof document !== 'undefined') {
-      return document.documentElement.classList.contains('dark');
-    }
-    return false;
-  });
-
-  const toggleDark = () => {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle('dark', next);
-  };
 
   const handleLogout = () => {
     logout();
@@ -78,16 +66,6 @@ const Navbar = () => {
 
           {/* Right side */}
           <div className="flex items-center space-x-2">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleDark}
-              className="p-2 text-navy-400 hover:text-navy-600 hover:bg-navy-100 rounded-xl transition-all focus-visible:ring-2 focus-visible:ring-primary-500"
-              title="Toggle theme"
-              aria-label="Toggle theme"
-            >
-              {isDark ? <FaSun size={16} /> : <FaMoon size={16} />}
-            </button>
-
             {/* Desktop auth buttons */}
             <div className="hidden md:flex items-center space-x-2">
               {isAuthenticated ? (

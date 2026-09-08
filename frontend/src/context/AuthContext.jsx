@@ -19,18 +19,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        try {
-          const token = await firebaseUser.getIdToken();
-          
-          const { data, error } = await authService.getMe(firebaseUser.uid, token);
-          
-          if (data) {
-            setUser({ ...data, user_id: data.user_id || data._id });
-          } else {
-            setUser({ email: firebaseUser.email, user_id: firebaseUser.uid, role: 'user' });
-          }
-        } catch (err) {
-          console.error("Failed to fetch MongoDB profile:", err);
+        const { data, error } = await authService.getMe();
+        if (data) {
+          setUser({ ...data, user_id: data.user_id || data._id });
+        } else {
+          // Firebase account exists but there's no CampusRide profile for it
+          // yet (registration didn't finish, or this is a brand-new sign-in
+          // mid-flow) - ProtectedRoute etc. still need a truthy `user`.
+          console.warn('No CampusRide profile yet:', error);
+          setUser({ email: firebaseUser.email, user_id: firebaseUser.uid, role: 'user' });
         }
       } else {
         setUser(null);
@@ -64,24 +61,47 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUid = userCredential.user.uid;
+      let firebaseUid;
+      let recovered = false;
 
-      const dbResult = await authService.registerToMongoDB({
-        firebaseUid,
-        name,
-        email,
-        studentId
-      });
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        firebaseUid = userCredential.user.uid;
+      } catch (createError) {
+        if (createError.code !== 'auth/email-already-in-use') throw createError;
+
+        // The Firebase account exists but registerToMongoDB may never have
+        // finished for it (e.g. a network blip, or the backend was briefly
+        // unreachable) - if the password given still matches that account,
+        // finish the profile instead of dead-ending on a Firebase-side check
+        // that knows nothing about our own Mongo state.
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          firebaseUid = userCredential.user.uid;
+          recovered = true;
+        } catch {
+          throw new Error(
+            'An account with this email already exists. If it\'s yours, try signing in instead, or use "Forgot password".'
+          );
+        }
+      }
+
+      const dbResult = await authService.registerToMongoDB({ name, email, studentId });
 
       if (!dbResult.success) {
+        // Already fully registered (Firebase + Mongo both complete) - not a
+        // failure, just means there was nothing left to recover.
+        if (recovered && dbResult.error?.toLowerCase().includes('already exists')) {
+          toast.success('Welcome back!');
+          return { success: true, data: { user: { user_id: firebaseUid, email } } };
+        }
         throw new Error(dbResult.error || 'Failed to save profile to database');
       }
 
-      toast.success('Registration successful!');
-      return { 
-        success: true, 
-        data: { user: { user_id: firebaseUid, name, email, studentId } } 
+      toast.success(recovered ? 'Account recovered and registration completed!' : 'Registration successful!');
+      return {
+        success: true,
+        data: { user: { user_id: firebaseUid, name, email, studentId } }
       };
     } catch (error) {
       return { success: false, error: error.message.replace('Firebase: ', '') };
@@ -91,7 +111,6 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await signOut(auth);
-      localStorage.removeItem('campusride_token');
       toast.success('Logged out successfully');
     } catch (error) {
       toast.error('Failed to log out');
